@@ -120,12 +120,21 @@ void setup() {
   client.onEvent(onEventsCallback);
   
   //- Connect to server
-  client.connect(websockets_server);
+  bool connected = client.connect(websockets_server);
 
-  //- Send a message
-  client.send("Hi Server!");
-  //- Send a ping
-  client.ping();
+  while(!connected){
+    // Exibimos mensagem de falha
+    Serial.println("Not Connected!");
+    Serial.println("Tentando reconectar em 2s");
+    delay(2000);
+    connected = client.connect(websockets_server);
+  }
+
+  // Exibimos mensagem de sucesso
+  Serial.println("Connected!");
+  // Enviamos uma msg "Hello Server" para o servidor
+  client.send("Hello Server");
+  // Se não foi possível conectar
 
   // Iniciamos o callback onde as mesagens serão recebidas
   client.onMessage([&](WebsocketsMessage message)
@@ -137,7 +146,7 @@ void setup() {
     // Ligamos/Desligamos o led de acordo com o comando
     if(message.data().equalsIgnoreCase("ON"))
         digitalWrite(ledVerde, HIGH);
-    else
+        
     if(message.data().equalsIgnoreCase("OFF"))
         digitalWrite(ledVerde, LOW);
   });
@@ -152,6 +161,7 @@ void setup() {
 //-------Loop--------
 
 void loop() {
+  if(client.available())
   client.poll();
   
   // Reset the loop if no new card present on the sensor/reader. This saves the entire process when idle.
