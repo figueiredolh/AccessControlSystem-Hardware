@@ -27,7 +27,7 @@ void onMessageCallback(WebsocketsMessage message) {
 
 void onEventsCallback(WebsocketsEvent event, String data) {
     if(event == WebsocketsEvent::ConnectionOpened) {
-        Serial.println("Connnection Opened");
+        Serial.println("Connnection Opened"); 
     } else if(event == WebsocketsEvent::ConnectionClosed) {
         Serial.println("Connnection Closed");
     } else if(event == WebsocketsEvent::GotPing) {
@@ -127,6 +127,21 @@ void setup() {
   //- Send a ping
   client.ping();
 
+  // Iniciamos o callback onde as mesagens serão recebidas
+  client.onMessage([&](WebsocketsMessage message)
+  {        
+    // Exibimos a mensagem recebida na serial
+    Serial.print("Got Message: ");
+    Serial.println(message.data());
+
+    // Ligamos/Desligamos o led de acordo com o comando
+    if(message.data().equalsIgnoreCase("ON"))
+        digitalWrite(ledVerde, HIGH);
+    else
+    if(message.data().equalsIgnoreCase("OFF"))
+        digitalWrite(ledVerde, LOW);
+  });
+
   //Iniciar módulo RFID
   iniciarRfid();
 
@@ -138,8 +153,8 @@ void setup() {
 
 void loop() {
   client.poll();
-  // Reset the loop if no new card present on the sensor/reader. This saves the entire process when idle.
   
+  // Reset the loop if no new card present on the sensor/reader. This saves the entire process when idle.
   if(rfidPresente()){
     for (byte i = 0; i < mfrc522.uid.size; i++)
     {
