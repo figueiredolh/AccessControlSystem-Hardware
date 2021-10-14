@@ -17,7 +17,7 @@ const char* ssid = "figueiredolima";
 const char* password = "henschelf63lima*";
 
 //Conexão com websockets server
-const char* websockets_server = "ws://192.168.100.118:3000/"; //server adress and port
+const char* websockets_server = "ws://192.168.100.118:3000/abertura"; //server adress and port
 using namespace websockets;
 
 void onMessageCallback(WebsocketsMessage message) {
