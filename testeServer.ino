@@ -2,6 +2,7 @@
 #include <MFRC522.h>
 #include <WiFi.h>
 #include <HTTPClient.h>
+#include <ArduinoWebsockets.h>
 
 //Configuração pinos RFID
 #define RST_PIN         22          // Pino de RST
@@ -14,6 +15,29 @@ MFRC522 mfrc522(SS_PIN, RST_PIN);
 //Ssid e senha WiFi
 const char* ssid = "figueiredolima";
 const char* password = "henschelf63lima*";
+
+//Conexão com websockets server
+const char* websockets_server = "ws://192.168.100.118:3000/"; //server adress and port
+using namespace websockets;
+
+void onMessageCallback(WebsocketsMessage message) {
+    Serial.print("Got Message: ");
+    Serial.println(message.data());
+}
+
+void onEventsCallback(WebsocketsEvent event, String data) {
+    if(event == WebsocketsEvent::ConnectionOpened) {
+        Serial.println("Connnection Opened");
+    } else if(event == WebsocketsEvent::ConnectionClosed) {
+        Serial.println("Connnection Closed");
+    } else if(event == WebsocketsEvent::GotPing) {
+        Serial.println("Got a Ping!");
+    } else if(event == WebsocketsEvent::GotPong) {
+        Serial.println("Got a Pong!");
+    }
+}
+
+WebsocketsClient client;
 
 //Variável globais
 String rfidUID; //UID RFID
@@ -79,6 +103,8 @@ void enviarTag(){
   http.end();
 }
 
+//-------Setup--------
+
 void setup() {
   Serial.begin(115200);   // Initialize serial communications with the PC
   //Serial.println("My Sketch has started");
@@ -87,14 +113,31 @@ void setup() {
   //Conexão com Wi-Fi
   conectarWifi();
 
-  //Inicia módulo RFID
+  //Conexão WebSockets
+  
+  //- Setup Callbacks
+  client.onMessage(onMessageCallback);
+  client.onEvent(onEventsCallback);
+  
+  //- Connect to server
+  client.connect(websockets_server);
+
+  //- Send a message
+  client.send("Hi Server!");
+  //- Send a ping
+  client.ping();
+
+  //Iniciar módulo RFID
   iniciarRfid();
 
   //led
   pinMode(ledVerde, OUTPUT);
 }
 
+//-------Loop--------
+
 void loop() {
+  client.poll();
   // Reset the loop if no new card present on the sensor/reader. This saves the entire process when idle.
   
   if(rfidPresente()){
