@@ -17,7 +17,7 @@ const char* ssid = "figueiredolima";
 const char* password = "henschelf63lima*";
 
 //Conexão com websockets server
-const char* websockets_server = "ws://192.168.100.118:3000/abertura"; //server adress and port
+const char* websockets_server = "ws://35.199.80.139/abertura";
 using namespace websockets;
 
 void onMessageCallback(WebsocketsMessage message) {
@@ -76,7 +76,7 @@ bool rfidPresente() {
 
 void enviarTag(){
   HTTPClient http;
-  url = "http://192.168.100.118:3000/tag?rfiduid="+rfidUID; //IP NodeJS
+  url = "http://35.199.80.139/tag?rfiduid="+rfidUID;//IP NodeJS
   http.begin(url.c_str());
   http.addHeader("content-type", "text/plain");
   http.addHeader("auth-key", "3df456dgfjga5hdk74");
