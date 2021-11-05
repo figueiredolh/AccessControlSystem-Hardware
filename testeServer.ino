@@ -103,16 +103,7 @@ void enviarTag(){
   http.end();
 }
 
-//-------Setup--------
-
-void setup() {
-  Serial.begin(115200);   // Initialize serial communications with the PC
-  //Serial.println("My Sketch has started");
-  while (!Serial);    // Do nothing if no serial port is opened (added for Arduinos based on ATMEGA32U4)
-  
-  //Conexão com Wi-Fi
-  conectarWifi();
-
+void iniciarWs(){
   //Conexão WebSockets
   
   //- Setup Callbacks
@@ -144,12 +135,28 @@ void setup() {
     Serial.println(message.data());
 
     // Ligamos/Desligamos o led de acordo com o comando
-    if(message.data().equalsIgnoreCase("ON"))
+    if(message.data().equalsIgnoreCase("ON")){
         digitalWrite(ledVerde, HIGH);
-        
+        delay(2000);
+        digitalWrite(ledVerde, LOW);
+    }
     if(message.data().equalsIgnoreCase("OFF"))
         digitalWrite(ledVerde, LOW);
   });
+}
+
+//-------Setup--------
+
+void setup() {
+  Serial.begin(115200);   // Initialize serial communications with the PC
+  //Serial.println("My Sketch has started");
+  while (!Serial);    // Do nothing if no serial port is opened (added for Arduinos based on ATMEGA32U4)
+  
+  //Conexão com Wi-Fi
+  conectarWifi();
+
+  //Conexão WebSockets 
+  iniciarWs();
 
   //Iniciar módulo RFID
   iniciarRfid();
@@ -157,12 +164,13 @@ void setup() {
   //led
   pinMode(ledVerde, OUTPUT);
 }
-
 //-------Loop--------
 
 void loop() {
-  if(client.available())
   client.poll();
+  if(!client.available()) {
+    iniciarWs();
+  }
   
   // Reset the loop if no new card present on the sensor/reader. This saves the entire process when idle.
   if(rfidPresente()){
