@@ -20,6 +20,7 @@ const char* password = "henschelf63lima*";
 const char* websockets_server = "ws://35.199.80.139/abertura";
 using namespace websockets;
 
+//Mensagens de callback WS
 void onMessageCallback(WebsocketsMessage message) {
     Serial.print("Got Message: ");
     Serial.println(message.data());
@@ -37,14 +38,15 @@ void onEventsCallback(WebsocketsEvent event, String data) {
     }
 }
 
+//Instância de WS
 WebsocketsClient client;
 
-//Variável globais
+//Variáveis globais
 String rfidUID; //UID RFID
 String url;
 int httpResponseCode;
 
-//Funções
+//Funções void
 
 void conectarWifi(){
   WiFi.begin(ssid, password);
@@ -56,8 +58,10 @@ void conectarWifi(){
 }
 
 void iniciarRfid(){
-  SPI.begin();      // Init SPI bus
-  mfrc522.PCD_Init();   // Init MFRC522
+  // Inicializa barramento SPI
+  SPI.begin();
+  // Inicializa barramento MFRC522      
+  mfrc522.PCD_Init();
 }
 
 bool rfidPresente() {
@@ -76,7 +80,7 @@ bool rfidPresente() {
 
 void enviarTag(){
   HTTPClient http;
-  url = "http://35.199.80.139/tag?rfiduid="+rfidUID;//IP NodeJS
+  url = "http://35.199.80.139/tag?rfiduid="+rfidUID; //IP da aplicação NodeJS
   http.begin(url.c_str());
   http.addHeader("content-type", "text/plain");
   http.addHeader("auth-key", "3df456dgfjga5hdk74");
@@ -90,11 +94,6 @@ void enviarTag(){
       delay(2000);
       digitalWrite(ledVerde, LOW);
     }
-    //else{
-      //digitalWrite(ledVermelho, HIGH);
-      //delay(2000);
-      //digitalWrite(ledVermelho, LOW);
-    //}
   }
   else {
     Serial.print("Error code: ");
@@ -110,7 +109,7 @@ void iniciarWs(){
   client.onMessage(onMessageCallback);
   client.onEvent(onEventsCallback);
   
-  //- Connect to server
+  //- Conexão com o servidor WS
   bool connected = client.connect(websockets_server);
 
   while(!connected){
@@ -148,9 +147,9 @@ void iniciarWs(){
 //-------Setup--------
 
 void setup() {
-  Serial.begin(115200);   // Initialize serial communications with the PC
-  //Serial.println("My Sketch has started");
-  while (!Serial);    // Do nothing if no serial port is opened (added for Arduinos based on ATMEGA32U4)
+  // Inicializa comunicação serial com o PC
+  Serial.begin(115200);
+  while (!Serial);
   
   //Conexão com Wi-Fi
   conectarWifi();
@@ -167,12 +166,15 @@ void setup() {
 //-------Loop--------
 
 void loop() {
+  //Continuar recebendo mensagens WS
   client.poll();
+
+  //Reinicializa a comunicação WS caso o cliente perca conexão
   if(!client.available()) {
     iniciarWs();
   }
   
-  // Reset the loop if no new card present on the sensor/reader. This saves the entire process when idle.
+  // Reinicializa o loop caso não tenha nenhum cartão presente no leitor RFID.
   if(rfidPresente()){
     for (byte i = 0; i < mfrc522.uid.size; i++)
     {
@@ -182,8 +184,10 @@ void loop() {
     rfidUID.toUpperCase();
     Serial.println("UID da Tag: " + rfidUID);
 
+    //Envia a o ID da tag
     enviarTag();
 
+    //Limpa o ID para um novo envio
     rfidUID = "";
   }
   delay(1000);
